@@ -1,12 +1,6 @@
 my_venv/
+my_venv/include/
+my_venv/lib/
+my_venv/share/
 __pycache__/
-*.tflite
-*.keras
-*.h5
-*.hdf5
-*.h5py
-*.h5py
-*.h5py
-*.h5py
-*.h5py
-*.h5py
+
