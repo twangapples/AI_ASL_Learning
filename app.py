@@ -6,10 +6,7 @@ Inference runs in-process in a single thread to avoid macOS multiprocessing mute
 import os
 os.environ.setdefault("PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION", "python")
 os.environ.setdefault("OMP_NUM_THREADS", "1")
-os.environ.setdefault("TF_NUM_INTEROP_THREADS", "1")
-os.environ.setdefault("TF_NUM_INTRAOP_THREADS", "1")
 os.environ.setdefault("GLOG_minloglevel", "2")          # suppress MediaPipe C++ INFO/WARNING logs
-os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")      # suppress TensorFlow C++ INFO/WARNING logs
 
 import asyncio
 import base64
@@ -42,9 +39,12 @@ def _load_model():
     """Load TFLite model and labels. Call with _models_lock held. Runs in inference thread."""
     global _interpreter, _input_details, _output_details, _labels
     try:
-        from tflite_runtime.interpreter import Interpreter  # pyright: ignore[reportMissingImports]
+        from ai_edge_litert.interpreter import Interpreter  # pyright: ignore[reportMissingImports]
     except ImportError:
-        from tensorflow.lite.python.interpreter import Interpreter
+        try:
+            from tflite_runtime.interpreter import Interpreter  # pyright: ignore[reportMissingImports]
+        except ImportError:
+            from tensorflow.lite.python.interpreter import Interpreter
     import numpy as np
     _interpreter = Interpreter(model_path=str(MODEL_PATH))
     _interpreter.allocate_tensors()
