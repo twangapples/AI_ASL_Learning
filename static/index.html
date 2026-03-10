@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASL Recognition</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 1rem;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+    }
+    h1 { margin-top: 0; font-size: 1.5rem; }
+    .container { max-width: 680px; margin: 0 auto; }
+    .video-wrap {
+      position: relative;
+      background: #16213e;
+      border-radius: 12px;
+      overflow: hidden;
+      aspect-ratio: 4/3;
+    }
+    #video, #canvas { display: block; width: 100%; height: 100%; object-fit: cover; }
+    #canvas { position: absolute; left: 0; top: 0; pointer-events: none; }
+    .status {
+      margin-top: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: #0f3460;
+      border-radius: 8px;
+      font-size: 1.1rem;
+    }
+    .status .letter { color: #e94560; font-weight: 700; }
+    .text-output {
+      margin-top: 0.5rem;
+      padding: 1rem;
+      min-height: 3rem;
+      background: #0f3460;
+      border-radius: 8px;
+      font-size: 1.25rem;
+      letter-spacing: 0.05em;
+    }
+    .controls { margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    button {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      background: #e94560;
+      color: #fff;
+    }
+    button:hover { opacity: 0.9; }
+    button.secondary { background: #533483; }
+    .error { color: #e94560; }
+    .hint { font-size: 0.9rem; color: #888; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ASL Recognition</h1>
+    <p class="hint">Allow camera access. Show one hand to the camera; letters are added after a short dwell. Clear (C) or Backspace (B).</p>
+    <div class="video-wrap">
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="canvas"></canvas>
+    </div>
+    <div class="status" id="status">Starting…</div>
+    <div class="text-output" id="textOutput"></div>
+    <div class="controls">
+      <button type="button" id="btnClear" class="secondary">Clear text</button>
+      <button type="button" id="btnBackspace" class="secondary">Backspace</button>
+    </div>
+  </div>
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const statusEl = document.getElementById('status');
+    const textOutput = document.getElementById('textOutput');
+    const btnClear = document.getElementById('btnClear');
+    const btnBackspace = document.getElementById('btnBackspace');
+
+    const DWELL_FRAMES = 8;
+    const COOLDOWN_MS = 500;
+    const POLL_MS = 120;
+
+    let lastPrediction = null;
+    let frameStability = 0;
+    let lastConfirmedLetter = null;
+    let cooldownUntil = 0;
+    let typedText = [];
+    let stream = null;
+    let pollTimer = null;
+
+    function setStatus(msg, isError = false) {
+      statusEl.textContent = msg;
+      statusEl.className = 'status' + (isError ? ' error' : '');
+    }
+
+    function updateTextDisplay() {
+      textOutput.textContent = typedText.slice(-50).join('');
+    }
+
+    async function captureAndPredict() {
+      if (!stream || video.readyState < 2) return;
+      const w = video.videoWidth;
+      const h = video.videoHeight;
+      if (!w || !h) return;
+      canvas.width = w;
+      canvas.height = h;
+      ctx.drawImage(video, 0, 0);
+      let dataUrl;
+      try {
+        dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      } catch (e) {
+        return;
+      }
+      const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, '');
+      try {
+        const res = await fetch('/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_base64: base64 })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || res.statusText);
+
+        const letter = data.letter;
+        const confidence = data.confidence;
+
+        if (letter) {
+          setStatus(`${letter} (${(confidence * 100).toFixed(0)}%)`);
+          if (letter === lastPrediction) {
+            frameStability++;
+          } else {
+            frameStability = 1;
+            lastPrediction = letter;
+          }
+          const now = Date.now();
+          if (
+            frameStability >= DWELL_FRAMES &&
+            now >= cooldownUntil &&
+            (lastConfirmedLetter !== letter || now - cooldownUntil >= COOLDOWN_MS)
+          ) {
+            typedText.push(letter);
+            lastConfirmedLetter = letter;
+            cooldownUntil = now + COOLDOWN_MS;
+            updateTextDisplay();
+          }
+        } else {
+          setStatus(data.message || 'No hand detected');
+          lastPrediction = null;
+          frameStability = 0;
+        }
+      } catch (err) {
+        setStatus('Error: ' + err.message, true);
+      }
+    }
+
+    function startPolling() {
+      if (pollTimer) return;
+      pollTimer = setInterval(captureAndPredict, POLL_MS);
+    }
+
+    function stopPolling() {
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    }
+
+    async function init() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+        video.srcObject = stream;
+        setStatus('Camera on. Show your hand.');
+        video.onloadedmetadata = () => startPolling();
+      } catch (e) {
+        setStatus('Camera error: ' + e.message, true);
+      }
+    }
+
+    btnClear.addEventListener('click', () => {
+      typedText = [];
+      lastConfirmedLetter = null;
+      updateTextDisplay();
+    });
+    btnBackspace.addEventListener('click', () => {
+      if (typedText.length) {
+        typedText.pop();
+        updateTextDisplay();
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'c' || e.key === 'C') {
+        typedText = [];
+        lastConfirmedLetter = null;
+        updateTextDisplay();
+      } else if (e.key === 'Backspace') {
+        if (typedText.length) {
+          typedText.pop();
+          updateTextDisplay();
+        }
+      }
+    });
+
+    init();
+    updateTextDisplay();
+  </script>
+</body>
+</html>
