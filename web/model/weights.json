@@ -1,0 +1,102 @@
+[
+  {
+    "name": "bn_gamma",
+    "offset": 0,
+    "length": 168,
+    "shape": [
+      42
+    ]
+  },
+  {
+    "name": "bn_beta",
+    "offset": 168,
+    "length": 168,
+    "shape": [
+      42
+    ]
+  },
+  {
+    "name": "bn_mean",
+    "offset": 336,
+    "length": 168,
+    "shape": [
+      42
+    ]
+  },
+  {
+    "name": "bn_var",
+    "offset": 504,
+    "length": 168,
+    "shape": [
+      42
+    ]
+  },
+  {
+    "name": "d1_kernel",
+    "offset": 672,
+    "length": 21504,
+    "shape": [
+      42,
+      128
+    ]
+  },
+  {
+    "name": "d1_bias",
+    "offset": 22176,
+    "length": 512,
+    "shape": [
+      128
+    ]
+  },
+  {
+    "name": "d2_kernel",
+    "offset": 22688,
+    "length": 32768,
+    "shape": [
+      128,
+      64
+    ]
+  },
+  {
+    "name": "d2_bias",
+    "offset": 55456,
+    "length": 256,
+    "shape": [
+      64
+    ]
+  },
+  {
+    "name": "d3_kernel",
+    "offset": 55712,
+    "length": 8192,
+    "shape": [
+      64,
+      32
+    ]
+  },
+  {
+    "name": "d3_bias",
+    "offset": 63904,
+    "length": 128,
+    "shape": [
+      32
+    ]
+  },
+  {
+    "name": "d4_kernel",
+    "offset": 64032,
+    "length": 3328,
+    "shape": [
+      32,
+      26
+    ]
+  },
+  {
+    "name": "d4_bias",
+    "offset": 67360,
+    "length": 104,
+    "shape": [
+      26
+    ]
+  }
+]

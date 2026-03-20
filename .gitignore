@@ -3,6 +3,7 @@ my_venv/
 venv/
 .venv/
 env/
+web_venv/
 
 # Python
 __pycache__/
@@ -21,6 +22,10 @@ build/
 .idea/
 .vscode/
 .DS_Store
+
+# Claude
+.claude/
+.claude_cache/
 
 # Optional
 *.log

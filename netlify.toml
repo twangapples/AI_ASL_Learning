@@ -1,0 +1,13 @@
+# Netlify configuration for ASL Live Recognizer
+# COOP/COEP headers are required for MediaPipe's WebAssembly runtime
+# (SharedArrayBuffer is only available in cross-origin isolated contexts)
+
+[build]
+  publish = "web"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cross-Origin-Opener-Policy    = "same-origin"
+    Cross-Origin-Embedder-Policy  = "require-corp"
+    Cross-Origin-Resource-Policy  = "same-site"

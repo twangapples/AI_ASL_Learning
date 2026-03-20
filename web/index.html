@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASL Live Recognizer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>ASL Live Recognizer</h1>
+    <p class="subtitle">Show a hand sign — letters A–Z will be detected</p>
+  </header>
+
+  <main>
+    <div id="video-wrapper">
+      <video id="webcam" autoplay playsinline muted></video>
+      <canvas id="overlay"></canvas>
+      <div id="no-hand-badge">No hand detected</div>
+    </div>
+
+    <div id="panel">
+      <div id="prediction-box">
+        <span id="letter">—</span>
+        <span id="confidence"></span>
+      </div>
+
+      <div id="dwell-track">
+        <div id="dwell-bar"></div>
+      </div>
+      <p id="dwell-label">Hold sign to type</p>
+
+      <div id="typed-section">
+        <label>Typed text</label>
+        <div id="typed-text"></div>
+      </div>
+
+      <div id="controls">
+        <button id="btn-space"     title="S">Space</button>
+        <button id="btn-backspace" title="B">⌫ Back</button>
+        <button id="btn-clear"     title="C">Clear</button>
+      </div>
+
+      <p id="status">Loading MediaPipe…</p>
+    </div>
+  </main>
+
+  <footer>
+    <p>Keyboard: <kbd>S</kbd> space &nbsp;|&nbsp; <kbd>B</kbd> backspace &nbsp;|&nbsp; <kbd>C</kbd> clear</p>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
