@@ -17,7 +17,9 @@ Real-time American Sign Language (ASL) hand gesture recognition using MediaPipe 
 
 ## Option 1: Web App (No Install)
 
-Open `web/index.html` directly in your browser — no server needed.
+**[Try it live → aisignlanguagetutor.netlify.app](https://aisignlanguagetutor.netlify.app/)**
+
+Or open `web/index.html` directly in your browser — no server needed.
 
 ```
 open web/index.html
